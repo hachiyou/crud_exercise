@@ -1,6 +1,7 @@
 # CRUD with HTML exercise
 
-Build a simple database and use Python to perform CRUD operations
+1. Build a simple database and use Python to perform CRUD operations.
+2. Build a webpage using both RAW HTML and flask framework.
 
 ## Getting Started
 
