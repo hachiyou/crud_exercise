@@ -29,8 +29,10 @@ def editRestaurant(restaurant_id):
                              as the id of the restaurant to look up
     """
     session = DBSession()  # Prevent threading error.
-    editedRestaurant = session.query(Restaurant)
+    
+    editedRestaurant = session.query(Restaurant) \
     .filter_by(id=restaurant_id).one()
+    
     if request.method == 'POST':
         if request.form['name']:
             editedRestaurant.name = request.form['name']
@@ -54,7 +56,29 @@ def deleteRestaurant(restaurant_id):
         restaurant_id (int): obtain from the URL builder
                              as the id of the restaurant to look up
     """
-    return ""
+    session = DBSession()  # Prevent threading error.
+    
+    deleteRestaurant = session.query(Restaurant) \
+    .filter_by(id=restaurant_id).one()
+    
+    if request.method == 'POST':
+        # First find all the menus that belong to this restaurant
+        # Delete them one by one
+        deleteMenus = session.query(MenuItem) \
+        .filter_by(restaurant_id=restaurant_id).all()
+        
+        for m in deleteMenus:
+            session.delete(m)
+            session.commit
+
+        # Then delete the resturant itself.
+        session.delete(deleteRestaurant)
+        session.commit()
+        flash("Restaurant has been deleted!")
+        return redirect(url_for('showRestaurant'))
+    else:
+        return render_template('deleterestaurant.html',
+                               r=deleteRestaurant)
 
 
 @app.route('/restaurants/<int:restaurant_id>/menu/')
