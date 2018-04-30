@@ -28,7 +28,21 @@ def editRestaurant(restaurant_id):
         restaurant_id (int): obtain from the URL builder
                              as the id of the restaurant to look up
     """
-    return ""
+    session = DBSession()  # Prevent threading error.
+    editedRestaurant = session.query(Restaurant)
+    .filter_by(id=restaurant_id).one()
+    if request.method == 'POST':
+        if request.form['name']:
+            editedRestaurant.name = request.form['name']
+        session.add(editedRestaurant)
+        session.commit()
+        flash("Restaurant has been renamed!")
+        return redirect(url_for('showRestaurant'))
+    else:
+        return render_template(
+            'editrestaurant.html',
+            restaurant_id=restaurant_id,
+            r=editedRestaurant)
 
 
 @app.route('/restaurants/<int:restaurant_id>/delete',
@@ -161,5 +175,6 @@ def singleMenuItemJSON(restaurant_id, menu_id):
 
 
 if __name__ == '__main__':
+    app.secret_key = "super_key"
     app.debug = True
     app.run(host='0.0.0.0', port=8080)
