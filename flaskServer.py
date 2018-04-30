@@ -16,6 +16,8 @@ def showRestaurant():
     """Display home page and a list of restaurants."""
     session = DBSession()  # Prevent threading error.
     restaurants = session.query(Restaurant)
+    if len(restaurants) ==0:
+        return render_template('index_empty.html')
     return render_template('index.html', restlist=restaurants)
 
 

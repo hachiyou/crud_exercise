@@ -1,0 +1,15 @@
+<html>
+	<head>
+		<link rel='stylesheet' type='text/css' href="{{ url_for('static', filename='styles.css') }}">
+	</head>
+	<body>
+		<div class="header">
+			<h1>Welcome!</h1>
+		</div>
+		<div class="message">
+			<p>Currently, there are no restaurants in the database.</p>
+			<p>Feel free to add some by clicking the link below.</p>
+		</div>
+		<a href="{{ url_for('newRestaurant') }}" class="link">Create new restaurant</a>
+	</body>
+</html>
