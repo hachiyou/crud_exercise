@@ -83,6 +83,28 @@ def editMenuItem(restaurant_id, menu_id):
             'editmenuitem.html', restaurant_id=restaurant_id, menu_id=menu_id, item=editedItem)
 
 
+@app.route('/restaurant/<int:restaurant_id>/<int:menu_id>/delete/',
+           methods=['GET', 'POST'])
+def deleteMenuItem(restaurant_id, menu_id):
+    """ Delete the selected menu item.
+
+    Arg:
+        restaurant_id (int): obtain from the URL builder
+                             as the id of the restaurant to look up
+        menu_id (int): obtain from the URL builder
+                             as the id of the menu to look up
+    """
+    session = DBSession()  # Prevent threading error.
+    deleteItem = session.query(MenuItem).filter_by(id=menu_id).one()
+    if request.method == 'POST':
+        session.delete(deleteItem)
+        session.commit()
+        flash("menu item has been deleted!")
+        return redirect(url_for('restaurantMenu', restaurant_id=restaurant_id))
+    else:
+        return render_template('deletemenuitem.html', item=deleteItem)
+
+
 if __name == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=8080)
