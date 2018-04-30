@@ -12,16 +12,39 @@ DBSession = sessionmaker(bind=engine)
 
 
 @app.route('/')
-def restaurantMenu():
-    """ Display the first restaurant's menu list. """
-    session = DBSession()  # Prevent threading error.
-    restaurant = session.query(Restaurant).first()
-    items = session.query(MenuItem).filter_by(restaurant_id=restaurant.id)
-    return render_template('menu.html', restaurant=restaurant, items=items)
+def showRestaurant():
+    """Display home page and a list of restaurants."""
+    session = DBSession()
+    restaurants = session.query(Restaurant)
+    return render_template('index.html', restlist=restaurants)
 
 
-@app.route('/restaurants/<int:restaurant_id>/')
-def restaurantMenu(restaurant_id):
+@app.route('/restaurants/<int:restaurant_id>/edit',
+           methods=['GET', 'POST'])
+def editRestaurant(restaurant_id):
+    """ Edit the name of a restaurant.
+
+    Arg:
+        restaurant_id (int): obtain from the URL builder
+                             as the id of the restaurant to look up
+    """
+    return ""
+
+
+@app.route('/restaurants/<int:restaurant_id>/delete',
+           methods=['GET', 'POST'])
+def deleteRestaurant(restaurant_id):
+    """ Delete the selected restaurant.
+
+    Arg:
+        restaurant_id (int): obtain from the URL builder
+                             as the id of the restaurant to look up
+    """
+    return ""
+
+
+@app.route('/restaurants/<int:restaurant_id>/menu/')
+def showMenu(restaurant_id):
     """ Displaying a specific restaurant.
 
     Arg:
@@ -34,7 +57,7 @@ def restaurantMenu(restaurant_id):
     return render_template('menu.html', restaurant=restaurant, items=items)
 
 
-@app.route('/restaurants/<int:restaurant_id>/new',
+@app.route('/restaurants/<int:restaurant_id>/menu/new',
            methods=['GET', 'POST'])
 def newMenuItem(restaurant_id):
     """ Create a new menu.
@@ -58,7 +81,7 @@ def newMenuItem(restaurant_id):
         return render_template('newmenuitem.html', restaurant_id=restaurant_id)
 
 
-@app.route('/restaurants/<int:restaurant_id>/<int:menu_id>/edit',
+@app.route('/restaurants/<int:restaurant_id>/menu/<int:menu_id>/edit',
            methods=['GET', 'POST'])
 def editMenuItem(restaurant_id, menu_id):
     """ Edit a selected menu item.
@@ -86,7 +109,7 @@ def editMenuItem(restaurant_id, menu_id):
             item=editedItem)
 
 
-@app.route('/restaurant/<int:restaurant_id>/<int:menu_id>/delete/',
+@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/delete/',
            methods=['GET', 'POST'])
 def deleteMenuItem(restaurant_id, menu_id):
     """ Delete the selected menu item.
@@ -137,6 +160,6 @@ def singleMenuItemJSON(restaurant_id, menu_id):
     return jsonify(MenuItem=item.serialize)
 
 
-if __name == '__main__':
+if __name__ == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=8080)

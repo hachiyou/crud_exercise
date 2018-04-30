@@ -1,0 +1,22 @@
+<html>
+
+	<body>
+		<div class="header">
+			<h1>Welcome!</h1>
+			<p>Below you will find a list of restaurants.</p>
+			<p>Select one to view its menus. </p>
+		</div>
+
+		{% for r in restlist %}
+			<div class="restaurant">
+				<span class = "name"><p> {{ r.name }} </p></span>
+				<div class="links">
+					<a href="{{ url_for('showMenu',restaurant_id = r.id) }}" >Menu</a>
+					<a href="{{ url_for('editRestaurant',restaurant_id = r.id) }}" >Edit Restaurant</a>
+					<a href="{{ url_for('deleteRestaurant',restaurant_id = r.id) }}" >Delete Restaurant</a>
+					
+				</div>
+			</div>
+		{% endfor %}
+	</body>
+</html>
