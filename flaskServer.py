@@ -105,6 +105,34 @@ def deleteMenuItem(restaurant_id, menu_id):
         return render_template('deletemenuitem.html', item=deleteItem)
 
 
+@app.route('/restaurant/<int:restaurant_id>/menu/JSON')
+def restaurantMenuJSON(restaurant_id):
+    """ Display all the menus of a restaurnt in JSON format.
+
+    Arg:
+        restaurant_id (int): obtain from the URL builder
+                             as the id of the restaurant to look up    
+    """
+    session = DBSession()  # Prevent threading error.
+    restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
+    items = session.query(MenuItem).filter_by(restaurant_id=restaurant_id)
+    return jsonify(MenuItems=[i.serialize for i in items])
+
+@app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/JSON')
+def singleMenuItemJSON(restaurant_id, menu_id):
+    """ Display a specific menu of a restaurnt in JSON format.
+
+    Arg:
+        restaurant_id (int): obtain from the URL builder
+                             as the id of the restaurant to look up    
+        menu_id (int): obtain from the URL builder
+                             as the id of the menu to look up
+    """
+    session = DBSession()  # Prevent threading error.
+    item = session.query(MenuItem).filter_by(id=menu_id).one()
+    return jsonify(MenuItem=item.serialize)
+
+
 if __name == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=8080)
