@@ -14,7 +14,7 @@ DBSession = sessionmaker(bind=engine)
 @app.route('/')
 def showRestaurant():
     """Display home page and a list of restaurants."""
-    session = DBSession()
+    session = DBSession()  # Prevent threading error.
     restaurants = session.query(Restaurant)
     return render_template('index.html', restlist=restaurants)
 
@@ -29,10 +29,10 @@ def editRestaurant(restaurant_id):
                              as the id of the restaurant to look up
     """
     session = DBSession()  # Prevent threading error.
-    
-    editedRestaurant = session.query(Restaurant) \
-    .filter_by(id=restaurant_id).one()
-    
+
+    editedRestaurant = session.query(Restaurant).filter_by(
+        id=restaurant_id).one()
+
     if request.method == 'POST':
         if request.form['name']:
             editedRestaurant.name = request.form['name']
@@ -57,16 +57,16 @@ def deleteRestaurant(restaurant_id):
                              as the id of the restaurant to look up
     """
     session = DBSession()  # Prevent threading error.
-    
-    deleteRestaurant = session.query(Restaurant) \
-    .filter_by(id=restaurant_id).one()
-    
+
+    deleteRestaurant = session.query(Restaurant).filter_by(
+        id=restaurant_id).one()
+
     if request.method == 'POST':
         # First find all the menus that belong to this restaurant
         # Delete them one by one
-        deleteMenus = session.query(MenuItem) \
-        .filter_by(restaurant_id=restaurant_id).all()
-        
+        deleteMenus = session.query(MenuItem).filter_by(
+            restaurant_id=restaurant_id).all()
+
         for m in deleteMenus:
             session.delete(m)
             session.commit
