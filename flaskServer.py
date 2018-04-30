@@ -188,6 +188,14 @@ def deleteMenuItem(restaurant_id, menu_id):
         return render_template('deletemenuitem.html', item=deleteItem)
 
 
+@app.route('/restaurant/JSON')
+def restaurantJSON():
+    """ Display all restaurnts in JSON format."""
+    session = DBSession()  # Prevent threading error.
+    restaurant = session.query(Restaurant).all()
+    return jsonify(Restaurants=[r.serialize for r in restaurants])
+
+
 @app.route('/restaurant/<int:restaurant_id>/menu/JSON')
 def restaurantMenuJSON(restaurant_id):
     """ Display all the menus of a restaurnt in JSON format.
