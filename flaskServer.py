@@ -34,6 +34,26 @@ def restaurantMenu(restaurant_id):
     return render_template('menu.html', restaurant=restaurant, items=items)
 
 
+@app.route('/restaurants/<int:restaurant_id>/new', methods=['GET', 'POST'])
+def newMenuItem(restaurant_id):
+    """ Create a new menu.
+
+    Arg:
+        restaurant_id (int): obtain from the URL builder
+                             as the id of the restaurant to look up
+    """
+    session = DBSession()  # Prevent Threading error.
+    if request.method == 'POST':
+        newItem = MenuItem(name=request.form['name'], description=request.form[
+                           'description'], price=request.form['price'], course=request.form['course'], restaurant_id=restaurant_id)
+        session.add(newItem)
+        session.commit()
+        flash("new menu item created!")
+        return redirect(url_for('restaurantMenu', restaurant_id=restaurant_id))
+    else:
+        return render_template('newmenuitem.html', restaurant_id=restaurant_id)
+
+
 if __name == '__main__':
     app.debug = True
     app.run(host='0.0.0.0', port=8080)
