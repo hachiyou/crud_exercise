@@ -17,16 +17,7 @@ def restaurantMenu():
     session = DBSession()  # Prevent Threading error.
     restaurant = session.query(Restaurant).first()
     items = session.query(MenuItem).filter_by(restaurant_id=restaurant.id)
-    output = ''
-    for i in items:
-        output += i.name
-        output += '</br>'
-        output += i.price
-        output += '</br>'
-        output += i.description
-        output += '</br>'
-        output += '</br>'
-    return output
+    return render_template('menu.html', restaurant=restaurant, items=items)
 
 
 @app.route('/restaurants/<int:restaurant_id>/')
@@ -37,20 +28,10 @@ def restaurantMenu(restaurant_id):
         restaurant_id (int): obtain from the URL builder
                              as the id of the restaurant to look up
     """
-    session = DBSession()
+    session = DBSession()  # Prevent Threading error.
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
     items = session.query(MenuItem).filter_by(restaurant_id=restaurant_id)
-    output = ''
-    for i in items:
-        output += i.name
-        output += '</br>'
-        output += i.price
-        output += '</br>'
-        output += i.description
-        output += '</br>'
-        output += '</br>'
-    return output
-
+    return render_template('menu.html', restaurant=restaurant, items=items)
 
 
 if __name == '__main__':
