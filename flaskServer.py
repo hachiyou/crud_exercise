@@ -80,7 +80,10 @@ def editMenuItem(restaurant_id, menu_id):
         return redirect(url_for('restaurantMenu', restaurant_id=restaurant_id))
     else:
         return render_template(
-            'editmenuitem.html', restaurant_id=restaurant_id, menu_id=menu_id, item=editedItem)
+            'editmenuitem.html',
+            restaurant_id=restaurant_id,
+            menu_id=menu_id,
+            item=editedItem)
 
 
 @app.route('/restaurant/<int:restaurant_id>/<int:menu_id>/delete/',
@@ -111,12 +114,13 @@ def restaurantMenuJSON(restaurant_id):
 
     Arg:
         restaurant_id (int): obtain from the URL builder
-                             as the id of the restaurant to look up    
+                             as the id of the restaurant to look up
     """
     session = DBSession()  # Prevent threading error.
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
     items = session.query(MenuItem).filter_by(restaurant_id=restaurant_id)
     return jsonify(MenuItems=[i.serialize for i in items])
+
 
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/JSON')
 def singleMenuItemJSON(restaurant_id, menu_id):
@@ -124,7 +128,7 @@ def singleMenuItemJSON(restaurant_id, menu_id):
 
     Arg:
         restaurant_id (int): obtain from the URL builder
-                             as the id of the restaurant to look up    
+                             as the id of the restaurant to look up
         menu_id (int): obtain from the URL builder
                              as the id of the menu to look up
     """
