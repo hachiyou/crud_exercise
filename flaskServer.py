@@ -19,6 +19,23 @@ def showRestaurant():
     return render_template('index.html', restlist=restaurants)
 
 
+@app.route('/restaurants/new',
+           methods=['GET', 'POST'])
+def newRestaurant():
+    """Create a new restaurant."""
+    session = DBSession()  # Prevent threading error.
+    restaurant = Restaurant(name="")
+    if request.method == 'POST':
+        if request.form['name']:
+            restaurant.name = request.form['name']
+        session.add(restaurant)
+        session.commit()
+        flash("New restaurant created.")
+        return redirect(url_for('showRestaurant'))
+    else:
+        return render_template('newrestaurant.html')
+
+
 @app.route('/restaurants/<int:restaurant_id>/edit',
            methods=['GET', 'POST'])
 def editRestaurant(restaurant_id):
