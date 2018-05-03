@@ -27,7 +27,8 @@ CLIENT_ID = json.loads(
 @app.route('/login')
 def showLogin():
     """Display a login page with Google Plus Login Button."""
-    state = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in xrange(32))
+    state = ''.join(random.choice(string.ascii_uppercase + string.digits)
+                    for x in xrange(32))
     login_session['state'] = state
     return render_template('login.html', STATE=state)
 
@@ -47,7 +48,8 @@ def gconnect():
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
-        response = make_response(json.dumps('Failed to upgrade the authorization code.'), 401)
+        response = make_response(
+            json.dumps('Failed to upgrade the authorization code.'), 401)
         reponse.headers['Content-Type'] = 'application/json'
         return response
 
@@ -67,26 +69,29 @@ def gconnect():
     # Validate the access token id against the intended user.
     gplus_id = credentials.id_token['sub']
     if result['user_id'] != gplus_id:
-        response = make_response(json.dump("Toeken's user ID does not match given user ID.")
-                                 , 401)
+        response = make_response(
+            json.dump("Toeken's user ID does not match given user ID."),
+            401)
         reponse.headers['Content-Type'] = 'application/json'
         return response
     # Validate the access token id against the app
     if result['issued_to'] != CLIENT_ID:
-        response = make_response(json.dump("Toeken's client ID does not match app's.")
-                                 , 401)
-        print ("Token's client ID does not match app's.")
+        response = make_response(
+            json.dump("Toeken's client ID does not match app's."),
+            401)
+        print("Token's client ID does not match app's.")
         reponse.headers['Content-Type'] = 'application/json'
         return response
 
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
-        response = make_response(json.dumps('Current user is already connected.'),
-                                 200)
+        response = make_response(
+            json.dumps('Current user is already connected.'),
+            200)
         response.headers['Content-Type'] = 'application/json'
         return response
-    
+
     # Store the access token in the session for later use.
     login_session['access_token'] = credentials.access_token
     login_session['gplus_id'] = gplus_id
@@ -108,9 +113,9 @@ def gconnect():
     output += '!</h1>'
     output += '<img src="'
     output += login_session['picture']
-    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '
+    output += ' " style = "width: 300px; height: 300px;border-radius: 150px;-webkit-border-radius: 150px;-moz-border-radius: 150px;"> '  # noqa
     flash("you are now logged in as %s" % login_session['email'])
-    print ("done!")
+    print("done!")
     return output
 
 
@@ -119,31 +124,36 @@ def gdisconnect():
     """Disconnect the current user."""
     access_token = login_session.get('access_token')
     if access_token is None:
-        print ('Access Token is None')
-        response = make_response(json.dumps('Current user not connected.'), 401)
+        print('Access Token is None')
+        response = make_response(
+            json.dumps('Current user not connected.'), 401)
         response.headers['Content-Type'] = 'application/json'
         return response
-    print ('In gdisconnect access token is %s', access_token)
-    print ('User name is: ')
-    print (login_session['username'])
-    url = 'https://accounts.google.com/o/oauth2/revoke?token=%s' % login_session['access_token']
+    print('In gdisconnect access token is %s', access_token)
+    print('User name is: ')
+    print(login_session['username'])
+    url = ('https://accounts.google.com/o/oauth2/revoke?token=%s'
+           % login_session['access_token'])
     h = httplib2.Http()
     result = h.request(url, 'GET')[0]
-    print ('result is ')
-    print (result)
+    print('result is ')
+    print(result)
 
-    # If the status code is 200, remove all the data from current login session.
+    # If the status code is 200,
+    # remove all the data from current login session.
     if result['status'] == '200':
         del login_session['access_token']
         del login_session['gplus_id']
         del login_session['username']
         del login_session['email']
         del login_session['picture']
-        response = make_response(json.dumps('Successfully disconnected.'), 200)
+        response = make_response(
+            json.dumps('Successfully disconnected.'), 200)
         response.headers['Content-Type'] = 'application/json'
         return response
     else:
-        response = make_response(json.dumps('Failed to revoke token for given user.', 400))
+        response = make_response(
+            json.dumps('Failed to revoke token for given user.', 400))
         response.headers['Content-Type'] = 'application/json'
         return response
 
@@ -153,7 +163,7 @@ def showRestaurant():
     """Display home page and a list of restaurants."""
     session = DBSession()  # Prevent threading error.
     restaurants = session.query(Restaurant)
-    if len(restaurants) ==0:
+    if len(restaurants)==0:
         return render_template('index_empty.html')
     return render_template('index.html', restlist=restaurants)
 
