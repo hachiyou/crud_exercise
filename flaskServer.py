@@ -34,12 +34,15 @@ def showLogin():
 
 @app.route('/gconnect', methods=['POST'])
 def gconnect():
+    """Connect to Google OAuth2 API and retrieve user data."""
+    # Match the current state with the login state.
     if request.args.get('state') != login_session['state']:
         response = make_response(json.dumps('Invalid state parameter'), 401)
         reponse.headers['Content-Type'] = 'application/json'
         return response
     code = request.data
     try:
+        # Use the authroization code to make a credentials object.
         oauth_flow = flow_from_clientsecrets('client_secrets.json', scope='')
         oauth_flow.redirect_uri = 'postmessage'
         credentials = oauth_flow.step2_exchange(code)
@@ -47,26 +50,28 @@ def gconnect():
         response = make_response(json.dumps('Failed to upgrade the authorization code.'), 401)
         reponse.headers['Content-Type'] = 'application/json'
         return response
+
+    # Validate the access token
     access_token = credentials.access_token
     url = ('https://www.googleapis.com/oauth2/v1/tokeninfo?access_token=%s'
            % access_token)
     h = httplib2.Http()
     result = json.loads(h.request(url, 'GET')[1])
-    
 
+    # Abort the app if there is an error
     if result.get('error') is not None:
         response = make_response(json.dumps(result.get('error')), 500)
         reponse.headers['Content-Type'] = 'application/json'
         return response
-        
-    gplus_id = credentials.id_token['sub']
 
+    # Validate the access token id against the intended user.
+    gplus_id = credentials.id_token['sub']
     if result['user_id'] != gplus_id:
         response = make_response(json.dump("Toeken's user ID does not match given user ID.")
                                  , 401)
         reponse.headers['Content-Type'] = 'application/json'
         return response
-
+    # Validate the access token id against the app
     if result['issued_to'] != CLIENT_ID:
         response = make_response(json.dump("Toeken's client ID does not match app's.")
                                  , 401)
@@ -74,7 +79,6 @@ def gconnect():
         reponse.headers['Content-Type'] = 'application/json'
         return response
 
-    stored_credentials = login_session.get('credentials')
     stored_access_token = login_session.get('access_token')
     stored_gplus_id = login_session.get('gplus_id')
     if stored_access_token is not None and gplus_id == stored_gplus_id:
@@ -112,6 +116,7 @@ def gconnect():
 
 @app.route('/gdisconnect')
 def gdisconnect():
+    """Disconnect the current user."""
     access_token = login_session.get('access_token')
     if access_token is None:
         print ('Access Token is None')
@@ -126,6 +131,8 @@ def gdisconnect():
     result = h.request(url, 'GET')[0]
     print ('result is ')
     print (result)
+
+    # If the status code is 200, remove all the data from current login session.
     if result['status'] == '200':
         del login_session['access_token']
         del login_session['gplus_id']
@@ -155,6 +162,10 @@ def showRestaurant():
            methods=['GET', 'POST'])
 def newRestaurant():
     """Create a new restaurant."""
+
+    # If there is no email in the login session AKA no current login user.
+    if 'email' not in login_session:
+        return redirect('/login')
     session = DBSession()  # Prevent threading error.
     restaurant = Restaurant(name="")
     if request.method == 'POST':
@@ -177,6 +188,11 @@ def editRestaurant(restaurant_id):
         restaurant_id (int): obtain from the URL builder
                              as the id of the restaurant to look up
     """
+
+    # If there is no email in the login session AKA no current login user.
+    if 'email' not in login_session:
+        return redirect('/login')
+
     session = DBSession()  # Prevent threading error.
 
     editedRestaurant = session.query(Restaurant).filter_by(
@@ -205,6 +221,11 @@ def deleteRestaurant(restaurant_id):
         restaurant_id (int): obtain from the URL builder
                              as the id of the restaurant to look up
     """
+
+    # If there is no email in the login session AKA no current login user.
+    if 'email' not in login_session:
+        return redirect('/login')
+
     session = DBSession()  # Prevent threading error.
 
     deleteRestaurant = session.query(Restaurant).filter_by(
@@ -253,6 +274,11 @@ def newMenuItem(restaurant_id):
         restaurant_id (int): obtain from the URL builder
                              as the id of the restaurant to look up
     """
+
+    # If there is no email in the login session AKA no current login user.
+    if 'email' not in login_session:
+        return redirect('/login')
+
     session = DBSession()  # Prevent threading error.
     if request.method == 'POST':
         newItem = MenuItem(name=request.form['name'],
@@ -279,6 +305,11 @@ def editMenuItem(restaurant_id, menu_id):
         menu_id (int): obtain from the URL builder
                              as the id of the menu to look up
     """
+
+    # If there is no email in the login session AKA no current login user.
+    if 'email' not in login_session:
+        return redirect('/login')
+
     session = DBSession()  # Prevent threading error.
     editedItem = session.query(MenuItem).filter_by(id=menu_id).one()
     if request.method == 'POST':
@@ -307,6 +338,11 @@ def deleteMenuItem(restaurant_id, menu_id):
         menu_id (int): obtain from the URL builder
                              as the id of the menu to look up
     """
+
+    # If there is no email in the login session AKA no current login user.
+    if 'email' not in login_session:
+        return redirect('/login')
+
     session = DBSession()  # Prevent threading error.
     deleteItem = session.query(MenuItem).filter_by(id=menu_id).one()
     if request.method == 'POST':
