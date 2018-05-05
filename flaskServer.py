@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify  # noqa
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from database_setup import Base, Restaurant, MenuItem
+from database_setup import Base, Restaurant, MenuItemm, User
 
 from flask import session as login_session
 import random
@@ -107,6 +107,14 @@ def gconnect():
     login_session['picture'] = data['picture']
     login_session['email'] = data['email']
 
+    # Test to see if the login user is in the database or not.
+    user_id = getUserID(login_session['email'])
+    # If yes, simply add the id to the current session.
+    # If not, call createUser to add the new user.
+    login_session['user_id'] = user_id
+    if user_id
+    else createUser(login_session)
+
     output = ''
     output += '<h1>Welcome, '
     output += login_session['email']
@@ -163,9 +171,15 @@ def showRestaurant():
     """Display home page and a list of restaurants."""
     session = DBSession()  # Prevent threading error.
     restaurants = session.query(Restaurant)
-    if len(restaurants)==0:
+    if len(restaurants) == 0:
         return render_template('index_empty.html')
-    return render_template('index.html', restlist=restaurants)
+    if 'email' not in login_session:
+        return render_template('publicrestaurants.html',
+                               restaurants=restaurants)
+    else:
+        user = getUserInfo(restaurant.user_id)
+        return render_template('index.html',
+                               restlist=restaurants, user=user)
 
 
 @app.route('/restaurants/new',
@@ -207,6 +221,11 @@ def editRestaurant(restaurant_id):
 
     editedRestaurant = session.query(Restaurant).filter_by(
         id=restaurant_id).one()
+    # If the current user is not the owner of the selected restaurant, alert.
+    if editRestaurant.user_id != login_session['user_id']:
+        return '''<script>function myFunction()
+{alert('You are not authorized to edit this restaurant.');}
+</script><body onload='myfunction' '>'''
 
     if request.method == 'POST':
         if request.form['name']:
@@ -241,6 +260,12 @@ def deleteRestaurant(restaurant_id):
     deleteRestaurant = session.query(Restaurant).filter_by(
         id=restaurant_id).one()
 
+    # If the current user is not the owner of the selected restaurant, alert.
+    if restaurantToDelete.user_id != login_session['user_id']:
+        return '''<script>function myFunction()
+{alert('You are not authorized to delete this restaurant.');}
+</script><body onload='myfunction' '>'''
+
     if request.method == 'POST':
         # First find all the menus that belong to this restaurant
         # Delete them one by one
@@ -272,7 +297,20 @@ def showMenu(restaurant_id):
     session = DBSession()  # Prevent threading error.
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
     items = session.query(MenuItem).filter_by(restaurant_id=restaurant_id)
-    return render_template('menu.html', restaurant=restaurant, items=items)
+
+    creator = getUserInfo(restaurant.user_id)
+
+    if ('email' not in login_session or creator.id != login_session['user_id']):  # noqa
+        return render_template('publicmenu.html',
+                               items=items,
+                               restaurant=restaurant,
+                               creator=creator)
+
+    else:
+        return render_template('menu.html',
+                               items=items,
+                               restaurant=restaurant,
+                               creator=creator)
 
 
 @app.route('/restaurants/<int:restaurant_id>/menu/new',
@@ -322,6 +360,13 @@ def editMenuItem(restaurant_id, menu_id):
 
     session = DBSession()  # Prevent threading error.
     editedItem = session.query(MenuItem).filter_by(id=menu_id).one()
+
+    # If the current user is not the creator of the selected menu, alert.
+    if editedItem.user_id != login_session['user_id']:
+        return '''<script>function myFunction()
+{alert('You are not authorized to edit this menu item.');}
+</script><body onload='myfunction' '>'''
+
     if request.method == 'POST':
         if request.form['name']:
             editedItem.name = request.form['name']
@@ -355,6 +400,13 @@ def deleteMenuItem(restaurant_id, menu_id):
 
     session = DBSession()  # Prevent threading error.
     deleteItem = session.query(MenuItem).filter_by(id=menu_id).one()
+
+    # If the current user is not the creator of the selected menu, alert.
+    if deleteItem.user_id != login_session['user_id']:
+        return '''<script>function myFunction()
+{alert('You are not authorized to edit this menu item.');}
+</script><body onload='myfunction' '>'''
+
     if request.method == 'POST':
         session.delete(deleteItem)
         session.commit()
@@ -399,6 +451,34 @@ def singleMenuItemJSON(restaurant_id, menu_id):
     session = DBSession()  # Prevent threading error.
     item = session.query(MenuItem).filter_by(id=menu_id).one()
     return jsonify(MenuItem=item.serialize)
+
+
+def createUser(login_session):
+    """Create a user."""
+    session = DBSession()
+    newUser = User(name=login_session['username'],
+                   email=login_session['email'],
+                   picture=login_session['picture'])
+    session.add(newUser)
+    session.commit()
+    user = session.query(User).filter_by(email=login_session['email']).one()
+    return user.id
+
+
+def getUserInfo(user_id):
+    """Find the user using the ID."""
+    session = DBSession()
+    user = session.query(User).filter_by(id=user_id).one()
+    return user
+
+
+def getUserID(email):
+    """Find the id of the user given the email."""
+    try:
+        user = session.query(User).filter_by(email=email).one()
+        return user.id
+    except:  # noqa
+        return None
 
 
 if __name__ == '__main__':
